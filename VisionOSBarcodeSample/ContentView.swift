@@ -7,17 +7,43 @@
 
 import SwiftUI
 import RealityKit
-import RealityKitContent
+import Vision
 
 struct ContentView: View {
+    
+    @State var qrData = ""
+    let qrImage = UIImage(named: "qr")
+    
     var body: some View {
         VStack {
-            Model3D(named: "Scene", bundle: realityKitContentBundle)
-                .padding(.bottom, 50)
-
-            Text("Hello, world!")
+            Image(uiImage: qrImage!)
+            Text(qrData)
+            Button(action: {
+                qrData = extractQRCode(image: qrImage!)!
+                UIApplication.shared.open(URL(string: qrData)!)
+            }) {
+                Text("Access")
+            }
         }
         .padding()
+    }
+    
+    private func extractQRCode(image: UIImage) -> String? {
+        let qrImage = image
+        let cgImage = qrImage.cgImage
+            
+        let handler = VNImageRequestHandler(cgImage: cgImage!)
+            
+        let barcodeRequest = VNDetectBarcodesRequest()
+        barcodeRequest.symbologies = [.qr]
+        
+        try?handler.perform([barcodeRequest])
+            
+        guard let results = barcodeRequest.results, let firstBarcode = results.first?.payloadStringValue else {
+                return nil
+        }
+        print(firstBarcode)
+        return firstBarcode
     }
 }
 
